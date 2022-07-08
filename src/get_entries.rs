@@ -209,8 +209,8 @@ impl Ord for Size {
         use Size::*;
         match (self, other) {
             (Unknown, Unknown) => Equal,
-            (Unknown, Known(_)) => Greater,
-            (Known(_), Unknown) => Less,
+            (Unknown, Known(_)) => Less,
+            (Known(_), Unknown) => Greater,
             (Known(lhs), Known(rhs)) => lhs.cmp(rhs),
         }
     }
