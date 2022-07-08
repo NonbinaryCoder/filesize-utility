@@ -6,3 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+fs_extra = "1.2.0"
+byte-unit = { version = "4.0.14", default-features = false }

@@ -6,9 +6,12 @@ mod parse_args;
 
 fn main() {
     match parse_args() {
-        Some(settings) => {
-            eprintln!("{:#?}", get_entries(settings));
-        }
+        Some(settings) => match get_entries(&settings) {
+            Some(entries) => {
+                eprintln!("{}", entries);
+            }
+            None => (),
+        },
         None => (),
     }
 }
