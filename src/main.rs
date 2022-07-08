@@ -1,3 +1,12 @@
+use parse_args::*;
+
+mod parse_args;
+
 fn main() {
-    println!("Hello, world!");
+    match parse_args() {
+        Some(settings) => {
+            eprintln!("{:?}", settings);
+        }
+        None => (),
+    }
 }
