@@ -56,12 +56,12 @@ impl EntryVec {
         execute!(
             io::stdout(),
             MoveUp(
-                self.entries
-                    .len()
+                (self.entries.len() + 1)
                     .try_into()
                     .expect("You have more than u16::MAX files in this directory!  Wow!")
             ),
             MoveToColumn(0),
+            Print(self.path.to_string_lossy() + "\n"),
         )
         .unwrap();
         let longest = {
