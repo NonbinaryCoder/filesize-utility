@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 fs_extra = "1.2.0"
 byte-unit = { version = "4.0.14", default-features = false }
+crossterm = "0.24.0"
