@@ -4,6 +4,7 @@ use std::{env, path::*};
 pub struct SearchSettings {
     pub path: PathBuf,
     pub sort_mode: SortMode,
+    pub reverse_sort: bool,
 }
 
 impl SearchSettings {
@@ -11,16 +12,16 @@ impl SearchSettings {
         SearchSettings {
             path,
             sort_mode: SortMode::default(),
+            reverse_sort: false,
         }
     }
 }
 
 #[derive(Debug)]
 pub enum SortMode {
+    None,
     Size,
-    Lexicographic,
-    RevSize,
-    RevLex,
+    Lex,
 }
 
 impl Default for SortMode {
@@ -39,10 +40,10 @@ pub fn parse_args() -> Option<SearchSettings> {
         let mut search_settings = SearchSettings::new(path);
         for option in args {
             match &option[..] {
+                "-n" | "--none" => search_settings.sort_mode = SortMode::None,
                 "-s" | "--size" => search_settings.sort_mode = SortMode::Size,
-                "-l" | "--lex" => search_settings.sort_mode = SortMode::Lexicographic,
-                "-r" | "--rev-size" => search_settings.sort_mode = SortMode::RevSize,
-                "-v" | "--rev-lex" => search_settings.sort_mode = SortMode::RevLex,
+                "-l" | "--lex" => search_settings.sort_mode = SortMode::Lex,
+                "-r" | "--reverse" => search_settings.reverse_sort = !search_settings.reverse_sort,
                 _ => (),
             }
         }
@@ -54,10 +55,10 @@ Usage:
 \tfilesize-utility <path> [options]
 
 Options:
-\t-s --size      Sort by file size, larger files at top (default)
-\t-l --lex       Sort lexicographically
-\t-r --rev-size  Sort by file size, larger files at bottom
-\t-v --rev-lex   Sort reverse lexicographically\
+\t-n --none     Use order entries are returned by file system
+\t-s --size     Order entries by entry size, larger entries at top (default)
+\t-l --lex      Order entries lexicographically
+\t-r --reverse  Reverse the ordering of entries
         "
         );
         return None;

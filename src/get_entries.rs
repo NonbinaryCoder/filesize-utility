@@ -1,4 +1,4 @@
-use crate::parse_args::SearchSettings;
+use crate::parse_args::{SearchSettings, SortMode};
 use byte_unit::*;
 use crossterm::{self, cursor::*, execute, style::*};
 use std::{
@@ -16,6 +16,37 @@ pub struct EntryVec {
 }
 
 impl EntryVec {
+    /// Sort this before knowing what the sizes of entries will be
+    fn pre_sort(&mut self, settings: &SearchSettings) {
+        match settings.sort_mode {
+            SortMode::Lex => self
+                .entries
+                .sort_unstable_by(|lhs, rhs| lhs.name.cmp(&rhs.name)),
+            _ => (),
+        }
+        if settings.reverse_sort {
+            self.entries.reverse();
+        }
+    }
+
+    /// Sorts this after finding out what the size of entries will be.  Assumes pre_sort has been called.  Returns true if
+    /// elements have been reordered
+    fn post_sort(&mut self, settings: &SearchSettings) -> bool {
+        match settings.sort_mode {
+            SortMode::Size => {
+                if settings.reverse_sort {
+                    self.entries
+                        .sort_unstable_by(|lhs, rhs| lhs.size.cmp(&rhs.size));
+                } else {
+                    self.entries
+                        .sort_unstable_by(|lhs, rhs| lhs.size.cmp(&rhs.size).reverse());
+                }
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// Overwrites what this had previously displayed with it's new structure.  Assumes the cursor hasn't moved and the
     /// elements of this haven't changed, only reordered
     fn reprint(&self) {
@@ -119,7 +150,7 @@ impl From<io::Result<fs::FileType>> for EntryType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Size {
     Known(AdjustedByte),
     Unknown,
@@ -172,6 +203,25 @@ impl Display for Size {
     }
 }
 
+impl Ord for Size {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        use std::cmp::Ordering::*;
+        use Size::*;
+        match (self, other) {
+            (Unknown, Unknown) => Equal,
+            (Unknown, Known(_)) => Greater,
+            (Known(_), Unknown) => Less,
+            (Known(lhs), Known(rhs)) => lhs.cmp(rhs),
+        }
+    }
+}
+
+impl PartialOrd for Size {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 pub fn get_entries(settings: &SearchSettings) -> Option<EntryVec> {
     let entries = fs::read_dir(&settings.path);
     match entries {
@@ -200,6 +250,7 @@ pub fn get_entries(settings: &SearchSettings) -> Option<EntryVec> {
                 }
             }
             let longest = longest;
+            res.pre_sort(&settings);
             clear_terminal();
             println!("{}:", res.path.to_string_lossy());
             for entry in res.entries.iter_mut() {
@@ -223,6 +274,11 @@ pub fn get_entries(settings: &SearchSettings) -> Option<EntryVec> {
                 )
                 .unwrap();
             }
+
+            if res.post_sort(&settings) {
+                res.reprint();
+            }
+
             return Some(res);
         }
         Err(e) => {
