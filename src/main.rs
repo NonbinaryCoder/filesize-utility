@@ -1,6 +1,7 @@
 use get_entries::*;
 use parse_args::*;
 
+mod display_number;
 mod get_entries;
 mod parse_args;
 
