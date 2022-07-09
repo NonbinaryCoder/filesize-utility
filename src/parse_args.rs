@@ -5,6 +5,7 @@ pub struct SearchSettings {
     pub path: PathBuf,
     pub sort_mode: SortMode,
     pub reverse_sort: bool,
+    pub explore: bool,
 }
 
 impl SearchSettings {
@@ -13,6 +14,7 @@ impl SearchSettings {
             path,
             sort_mode: SortMode::default(),
             reverse_sort: false,
+            explore: false,
         }
     }
 }
@@ -44,6 +46,7 @@ pub fn parse_args() -> Option<SearchSettings> {
                 "-s" | "--size" => search_settings.sort_mode = SortMode::Size,
                 "-l" | "--lex" => search_settings.sort_mode = SortMode::Lex,
                 "-r" | "--reverse" => search_settings.reverse_sort = !search_settings.reverse_sort,
+                "-e" | "--explore" => search_settings.explore = !search_settings.explore,
                 _ => (),
             }
         }
@@ -59,6 +62,7 @@ Options:
 \t-s --size     Order entries by entry size, larger entries at top (default)
 \t-l --lex      Order entries lexicographically
 \t-r --reverse  Reverse the ordering of entries
+\t-e --explore  Launch the app in explore mode
         "
         );
         return None;

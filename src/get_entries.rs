@@ -1,4 +1,7 @@
-use crate::parse_args::{SearchSettings, SortMode};
+use crate::{
+    display_number::*,
+    parse_args::{SearchSettings, SortMode},
+};
 use byte_unit::*;
 use crossterm::{self, cursor::*, execute, style::*};
 use std::{
@@ -53,12 +56,12 @@ impl EntryVec {
         execute!(
             io::stdout(),
             MoveUp(
-                self.entries
-                    .len()
+                (self.entries.len() + 1)
                     .try_into()
                     .expect("You have more than u16::MAX files in this directory!  Wow!")
             ),
             MoveToColumn(0),
+            Print(self.path.to_string_lossy() + "\n"),
         )
         .unwrap();
         let longest = {
@@ -68,8 +71,8 @@ impl EntryVec {
             }
             longest
         };
-        for entry in self.entries.iter() {
-            entry.print_with_padding(longest);
+        for (index, entry) in self.entries.iter().enumerate() {
+            entry.print_with_padding_and_index(longest, index);
         }
     }
 }
@@ -83,12 +86,13 @@ pub struct EntryData {
 }
 
 impl EntryData {
-    fn print_with_padding(&self, padding: usize) {
+    fn print_with_padding_and_index(&self, padding: usize, index: usize) {
         let name = self.name.to_string_lossy();
         let typ = &self.typ;
         let size = &self.size;
         execute!(
             io::stdout(),
+            Print(format!("{}: ", num_to_char(index))),
             SetForegroundColor(typ.get_color()),
             Print(format!("({typ})")),
             ResetColor,
@@ -253,11 +257,12 @@ pub fn get_entries(settings: &SearchSettings) -> Option<EntryVec> {
             res.pre_sort(&settings);
             clear_terminal();
             println!("{}:", res.path.to_string_lossy());
-            for entry in res.entries.iter_mut() {
+            for (index, entry) in res.entries.iter_mut().enumerate() {
                 let typ = &entry.typ;
                 let name = entry.name.to_string_lossy();
                 execute!(
                     io::stdout(),
+                    Print(format!("{}: ", num_to_char(index))),
                     SetForegroundColor(typ.get_color()),
                     Print(format!("({typ})")),
                     ResetColor,
